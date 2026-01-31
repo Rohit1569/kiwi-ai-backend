@@ -4,10 +4,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const sequelize = require('./config/database');
 
-// Import Models to ensure they are synchronized
+// Import Models
 const User = require('./models/User');
 const UsageStats = require('./models/UsageStats');
 const Otp = require('./models/Otp');
+const PendingUser = require('./models/PendingUser');
 const PasswordResetToken = require('./models/PasswordResetToken');
 
 // Import Routes
@@ -21,29 +22,40 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 
+// Database connection helper
+let isDbSynced = false;
+const syncDb = async () => {
+  if (isDbSynced) return;
+  try {
+    await sequelize.authenticate();
+    // In serverless, we don't want to sync on every request.
+    // If you need to sync, do it once manually or use migrations.
+    // await sequelize.sync({ alter: false }); 
+    isDbSynced = true;
+    console.log('PostgreSQL Connected.');
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+  }
+};
+
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  await syncDb();
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/usage', usageRoutes);
 
 app.get('/', (req, res) => res.send('APPLE AI API is running...'));
 
-const PORT = process.env.PORT || 5002;
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5002;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
 
-const startServer = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connected successfully.');
-    
-    // Force sync the specific OTP table
-    await sequelize.sync({ alter: true }); 
-    console.log('PostgreSQL Protocols Synchronized.');
-    
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server is running on http://192.168.0.2:${PORT}`);
-    });
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-};
-
-startServer();
+module.exports = app; // Export for Vercel
