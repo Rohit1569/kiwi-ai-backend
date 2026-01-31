@@ -5,13 +5,20 @@ const pg = require('pg');
 const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: 'postgres',
-      dialectModule: pg, // CRITICAL FIX FOR VERCEL
+      dialectModule: pg,
       logging: false,
       dialectOptions: {
         ssl: {
           require: true,
           rejectUnauthorized: false
         }
+      },
+      // Optimizing pool for serverless environments
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
       }
     })
   : new Sequelize(
@@ -21,7 +28,7 @@ const sequelize = process.env.DATABASE_URL
       {
         host: process.env.DB_HOST || 'localhost',
         dialect: 'postgres',
-        dialectModule: pg, // CRITICAL FIX FOR VERCEL
+        dialectModule: pg,
         logging: false,
         define: {
           timestamps: true,
