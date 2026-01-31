@@ -17,37 +17,51 @@ const usageRoutes = require('./routes/usageRoutes');
 
 const app = express();
 
-// Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: '*', credentials: true })); // Explicit CORS for mobile
+app.use(cors());
 app.use(express.json());
 
-// Database connection helper
-let isDbSynced = false;
-const syncDb = async () => {
-  if (isDbSynced) return;
+// Database connection & sync logic for Serverless
+let isDbInitialised = false;
+const initDb = async () => {
+  if (isDbInitialised) return;
   try {
     await sequelize.authenticate();
-    isDbSynced = true;
-    console.log('PostgreSQL Connected.');
+    // This creates tables if they don't exist
+    await sequelize.sync({ alter: true }); 
+    isDbInitialised = true;
+    console.log('Neon Tech Database Initialised.');
   } catch (error) {
-    console.error('Database connection failed:', error.message);
+    console.error('DATABASE INIT ERROR:', error.message);
+    throw error;
   }
 };
 
-// Middleware to ensure DB connection
-app.use(async (req, res, next) => {
-  await syncDb();
-  next();
+// Health Check with DB Status
+app.get('/api/health', async (req, res) => {
+  try {
+    await initDb();
+    res.json({ status: 'OK', database: 'Connected' });
+  } catch (err) {
+    res.status(500).json({ status: 'Error', message: err.message });
+  }
 });
 
-// API Routes
+// Middleware to ensure DB is ready for any API call
+app.use(async (req, res, next) => {
+  try {
+    await initDb();
+    next();
+  } catch (err) {
+    res.status(503).json({ error: 'Database initializing, please retry in a moment.' });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/usage', usageRoutes);
 
-app.get('/', (req, res) => res.send('APPLE AI API is running...'));
+app.get('/', (req, res) => res.send('APPLE AI API is active.'));
 
-// For local development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5002;
   app.listen(PORT, '0.0.0.0', () => {
