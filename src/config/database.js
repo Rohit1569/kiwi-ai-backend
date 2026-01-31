@@ -8,7 +8,7 @@ const sequelizeOptions = {
   logging: false,
   define: {
     timestamps: true,
-    underscored: true,
+    underscored: true, // Forces 'created_at' instead of 'createdAt'
     createdAt: 'created_at',
     updatedAt: 'updated_at'
   },
