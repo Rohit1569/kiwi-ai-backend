@@ -21,39 +21,49 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
 
-// Database connection & sync logic for Serverless
-let isDbInitialised = false;
-const initDb = async () => {
-  if (isDbInitialised) return;
+// Database connection helper (No sync here!)
+let isDbAuthenticated = false;
+const connectDb = async () => {
+  if (isDbAuthenticated) return;
   try {
     await sequelize.authenticate();
-    // This creates tables if they don't exist
-    await sequelize.sync({ alter: true }); 
-    isDbInitialised = true;
-    console.log('Neon Tech Database Initialised.');
+    isDbAuthenticated = true;
+    console.log('Neon Tech Database Connected.');
   } catch (error) {
-    console.error('DATABASE INIT ERROR:', error.message);
+    console.error('DATABASE CONNECTION ERROR:', error.message);
     throw error;
   }
 };
 
-// Health Check with DB Status
+// ONE-TIME SETUP ROUTE: Call this once to create/fix tables
+app.get('/api/setup', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    // Force sync tables - ONLY RUN THIS ONCE OR WHEN SCHEMA CHANGES
+    await sequelize.sync({ alter: true }); 
+    res.json({ message: "Database tables synchronized successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Health Check
 app.get('/api/health', async (req, res) => {
   try {
-    await initDb();
+    await connectDb();
     res.json({ status: 'OK', database: 'Connected' });
   } catch (err) {
     res.status(500).json({ status: 'Error', message: err.message });
   }
 });
 
-// Middleware to ensure DB is ready for any API call
+// Middleware to ensure DB is connected
 app.use(async (req, res, next) => {
   try {
-    await initDb();
+    await connectDb();
     next();
   } catch (err) {
-    res.status(503).json({ error: 'Database initializing, please retry in a moment.' });
+    res.status(503).json({ error: 'Service Unavailable: Database Connection Failed' });
   }
 });
 
