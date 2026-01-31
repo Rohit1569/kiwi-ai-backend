@@ -19,7 +19,7 @@ const app = express();
 
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors());
+app.use(cors({ origin: '*', credentials: true })); // Explicit CORS for mobile
 app.use(express.json());
 
 // Database connection helper
@@ -28,9 +28,6 @@ const syncDb = async () => {
   if (isDbSynced) return;
   try {
     await sequelize.authenticate();
-    // In serverless, we don't want to sync on every request.
-    // If you need to sync, do it once manually or use migrations.
-    // await sequelize.sync({ alter: false }); 
     isDbSynced = true;
     console.log('PostgreSQL Connected.');
   } catch (error) {
@@ -58,4 +55,4 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-module.exports = app; // Export for Vercel
+module.exports = app;
