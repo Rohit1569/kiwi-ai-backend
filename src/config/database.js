@@ -7,9 +7,17 @@ const sequelizeOptions = {
   dialectModule: pg,
   logging: false,
   define: {
-    underscored: true,
+    underscored: true, // Auto-map CamelCase to Snake_Case
     createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    updatedAt: 'updated_at',
+    deletedAt: 'deleted_at',
+    freezeTableName: true // Prevents Sequelize from pluralizing table names
+  },
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
   },
   pool: {
     max: 5,
@@ -19,28 +27,16 @@ const sequelizeOptions = {
   }
 };
 
-if (process.env.DATABASE_URL) {
-  // Fix for SSL warning and Neon compatibility
-  sequelizeOptions.dialectOptions = {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
-    }
-  };
-  
-  // If the URL doesn't already have sslmode, we can append it if necessary, 
-  // but usually dialectOptions.ssl is enough for Sequelize.
-}
-
-const sequelize = process.env.DATABASE_URL
+const sequelize = process.env.DATABASE_URL 
   ? new Sequelize(process.env.DATABASE_URL, sequelizeOptions)
   : new Sequelize(
-      process.env.DB_NAME || 'apple_ai_db',
-      process.env.DB_USER || 'postgres',
-      process.env.DB_PASSWORD || 'password',
+      process.env.DB_NAME,
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
       {
-        ...sequelizeOptions,
-        host: process.env.DB_HOST || 'localhost'
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 5432,
+        ...sequelizeOptions
       }
     );
 

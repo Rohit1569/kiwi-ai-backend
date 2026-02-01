@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const bcrypt = require('bcryptjs'); // Switched to bcryptjs
+const bcrypt = require('bcryptjs');
 
 const User = sequelize.define('User', {
   id: {
@@ -20,24 +20,19 @@ const User = sequelize.define('User', {
       this.setDataValue('email', value.toLowerCase().trim());
     }
   },
-  password: {
+  password: { 
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'password_hash'
+    field: 'password_hash' // Maps to the db column
   },
   is_verified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   }
 }, {
-  tableName: 'Users', // Explicitly match migration
-  hooks: {
-    beforeCreate: async (user) => {
-      if (user.password) {
-        user.password = await bcrypt.hash(user.password, 10);
-      }
-    }
-  }
+  tableName: 'Users',
+  underscored: true, // Forces snake_case for auto-generated columns
+  timestamps: true
 });
 
 User.prototype.validPassword = async function(password) {
