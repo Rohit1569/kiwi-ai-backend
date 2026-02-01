@@ -32,7 +32,7 @@ const User = sequelize.define('User', {
   underscored: true
 });
 
-User.prototype.validPassword = async function(password) {
+User.prototype.validPassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 

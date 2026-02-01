@@ -13,7 +13,6 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     }
   },
   define: {
-    timestamps: false, // SHUT OFF AUTOMATIC TIMESTAMPS GLOBALLY
     underscored: true,
     freezeTableName: true
   }
