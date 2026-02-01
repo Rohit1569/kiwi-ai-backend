@@ -19,14 +19,17 @@ const sequelizeOptions = {
   }
 };
 
-// If using Neon/Cloud Postgres, ensure SSL is configured correctly to avoid warnings and connection issues
 if (process.env.DATABASE_URL) {
+  // Fix for SSL warning and Neon compatibility
   sequelizeOptions.dialectOptions = {
     ssl: {
       require: true,
       rejectUnauthorized: false
     }
   };
+  
+  // If the URL doesn't already have sslmode, we can append it if necessary, 
+  // but usually dialectOptions.ssl is enough for Sequelize.
 }
 
 const sequelize = process.env.DATABASE_URL
