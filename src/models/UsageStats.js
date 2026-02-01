@@ -1,6 +1,7 @@
-const { sequelize, DataTypes } = require('../config/database');
+const db = require('../config/database');
+const { DataTypes } = require('sequelize');
 
-const UsageStats = sequelize.define('UsageStats', {
+const UsageStats = db.sequelize.define('UsageStats', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -14,13 +15,22 @@ const UsageStats = sequelize.define('UsageStats', {
   meetings_scheduled_count: { type: DataTypes.INTEGER, defaultValue: 0 },
   emails_sent_count: { type: DataTypes.INTEGER, defaultValue: 0 },
   cab_booking_count: { type: DataTypes.INTEGER, defaultValue: 0 },
-  other_feature_usage_count: { type: DataTypes.INTEGER, defaultValue: 0 }
+  other_feature_usage_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: new Date(),
+    field: 'created_at'
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: new Date(),
+    field: 'updated_at'
+  }
 }, {
   tableName: 'UsageStats',
-  underscored: true,
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false // PERMANENTLY DISABLE THE AUTOMATIC ENGINE
 });
 
 module.exports = UsageStats;

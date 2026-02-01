@@ -1,6 +1,7 @@
-const { sequelize, DataTypes } = require('../config/database');
+const db = require('../config/database');
+const { DataTypes } = require('sequelize');
 
-const Otp = sequelize.define('Otp', {
+const Otp = db.sequelize.define('Otp', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -17,13 +18,22 @@ const Otp = sequelize.define('Otp', {
   expires_at: {
     type: DataTypes.DATE,
     allowNull: false
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: new Date(),
+    field: 'created_at'
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: new Date(),
+    field: 'updated_at'
   }
 }, {
   tableName: 'Otps',
-  timestamps: true,
-  underscored: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false
 });
 
 module.exports = Otp;
