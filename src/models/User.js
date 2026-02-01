@@ -20,7 +20,7 @@ const User = sequelize.define('User', {
   password: { 
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'password_hash' 
+    field: 'password_hash'
   },
   is_verified: {
     type: DataTypes.BOOLEAN,
@@ -29,13 +29,11 @@ const User = sequelize.define('User', {
 }, {
   tableName: 'Users',
   timestamps: true,
-  underscored: true,
-  createdAt: 'created_at', // Direct mapping to your DB column
-  updatedAt: 'updated_at'  // Direct mapping to your DB column
+  underscored: true
 });
 
 User.prototype.validPassword = async function(password) {
-  return await bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, this.password);
 };
 
 module.exports = User;
