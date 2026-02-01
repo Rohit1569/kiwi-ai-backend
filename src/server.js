@@ -4,6 +4,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const sequelize = require('./config/database');
 
+// Import Models to ensure they are available for sync
+const User = require('./models/User');
+const UsageStats = require('./models/UsageStats');
+const Otp = require('./models/Otp');
+const PendingUser = require('./models/PendingUser');
+const PasswordResetToken = require('./models/PasswordResetToken');
+
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const usageRoutes = require('./routes/usageRoutes');
@@ -23,7 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database connection check (NO SYNC HERE)
+// Database connection check
 let isDbConnected = false;
 const connectDb = async () => {
   if (isDbConnected) return;
@@ -42,11 +49,25 @@ app.get('/api/health', async (req, res) => {
   res.json({ status: 'OK', database: isDbConnected ? 'Connected' : 'Offline' });
 });
 
+// One-time manual sync route (RESTORED)
+app.get('/api/admin/sync', async (req, res) => {
+  try {
+    console.log('Starting manual database sync...');
+    await sequelize.authenticate();
+    // This creates tables if they don't exist and updates schema
+    await sequelize.sync({ alter: true }); 
+    res.json({ status: "SUCCESS", message: "Database schema synchronized successfully." });
+  } catch (err) {
+    console.error('SYNC ERROR:', err);
+    res.status(500).json({ status: "ERROR", error: err.message });
+  }
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/usage', usageRoutes);
 
-app.get('/', (req, res) => res.send('APPLE AI CORE IS ACTIVE'));
+app.get('/', (req, res) => res.send('APPLE AI CORE IS ACTIVE. Visit /api/admin/sync to initialize DB.'));
 
 // Favicon handlers
 app.get('/favicon.ico', (req, res) => res.status(204).end());
