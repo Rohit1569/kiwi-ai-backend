@@ -12,7 +12,7 @@ const UsageStats = sequelize.define('UsageStats', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: User,
+      model: 'Users',
       key: 'id'
     }
   },
@@ -36,6 +36,9 @@ const UsageStats = sequelize.define('UsageStats', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   }
+}, {
+  tableName: 'UsageStats', // Match Migration Exactly
+  underscored: true
 });
 
 User.hasOne(UsageStats, { foreignKey: 'user_id', onDelete: 'CASCADE' });

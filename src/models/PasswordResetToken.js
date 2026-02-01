@@ -12,7 +12,7 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: User,
+      model: 'Users',
       key: 'id'
     }
   },
@@ -24,6 +24,9 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
     type: DataTypes.DATE,
     allowNull: false
   }
+}, {
+  tableName: 'PasswordResetTokens', // Match Migration Exactly
+  underscored: true
 });
 
 User.hasMany(PasswordResetToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
