@@ -15,15 +15,12 @@ const User = sequelize.define('User', {
   email: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: false,
-    set(value) {
-      this.setDataValue('email', value.toLowerCase().trim());
-    }
+    allowNull: false
   },
   password: { 
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'password_hash' // This must match the migration exactly
+    field: 'password_hash' 
   },
   is_verified: {
     type: DataTypes.BOOLEAN,

@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const bcrypt = require('bcryptjs'); // Switched to bcryptjs
+const bcrypt = require('bcryptjs');
 
 const PendingUser = sequelize.define('PendingUser', {
   id: {
@@ -15,10 +15,7 @@ const PendingUser = sequelize.define('PendingUser', {
   email: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: false,
-    set(value) {
-      this.setDataValue('email', value.toLowerCase().trim());
-    }
+    allowNull: false
   },
   password: {
     type: DataTypes.STRING,
@@ -33,7 +30,11 @@ const PendingUser = sequelize.define('PendingUser', {
     allowNull: false
   }
 }, {
-  tableName: 'PendingUsers', // Explicitly match migration
+  tableName: 'PendingUsers',
+  underscored: true,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {
