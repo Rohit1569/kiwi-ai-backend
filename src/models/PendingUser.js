@@ -1,7 +1,8 @@
-const { sequelize, DataTypes } = require('../config/database');
+const db = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { DataTypes } = require('sequelize');
 
-const PendingUser = sequelize.define('PendingUser', {
+const PendingUser = db.sequelize.define('PendingUser', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -31,18 +32,18 @@ const PendingUser = sequelize.define('PendingUser', {
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: new Date(),
     field: 'created_at'
   },
   updated_at: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: new Date(),
     field: 'updated_at'
   }
 }, {
   tableName: 'PendingUsers',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
+  timestamps: false, // FORCE-STOP AUTOMATIC TIMESTAMPS
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {

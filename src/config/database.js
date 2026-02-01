@@ -13,11 +13,9 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     }
   },
   define: {
-    // LAYER 1: Global Naming Policy
+    timestamps: false, // SHUT OFF AUTOMATIC ENGINE GLOBALLY
     underscored: true,
-    freezeTableName: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    freezeTableName: true
   }
 });
 

@@ -1,7 +1,8 @@
-const { sequelize, DataTypes } = require('../config/database');
+const db = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { DataTypes } = require('sequelize');
 
-const User = sequelize.define('User', {
+const User = db.sequelize.define('User', {
   id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
@@ -25,22 +26,21 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
-  // LAYER 2: Explicit Attribute Mapping (The final shield)
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: new Date(),
     field: 'created_at'
   },
   updated_at: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: new Date(),
     field: 'updated_at'
   }
 }, {
   tableName: 'Users',
-  timestamps: true,
-  createdAt: 'created_at', // Redundant but safe
-  updatedAt: 'updated_at'  // Redundant but safe
+  timestamps: false // DISABLE AUTOMATIC INJECTION
 });
 
 User.prototype.validPassword = async function(password) {
