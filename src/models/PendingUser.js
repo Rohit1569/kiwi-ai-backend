@@ -27,7 +27,8 @@ const PendingUser = sequelize.define('PendingUser', {
   },
   expires_at: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    field: 'expires_at'
   },
   created_at: {
     type: DataTypes.DATE,
@@ -43,7 +44,10 @@ const PendingUser = sequelize.define('PendingUser', {
   }
 }, {
   tableName: 'PendingUsers',
-  timestamps: false, // Explicitly false to avoid 'createdAt'
+  underscored: true,
+  timestamps: true, // Re-enabled but with explicit mapping below
+  createdAt: 'created_at', // CRITICAL: This is the internal override
+  updatedAt: 'updated_at',  // CRITICAL: This is the internal override
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {

@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const User = require('./User');
 
 const PasswordResetToken = sequelize.define('PasswordResetToken', {
   id: {
@@ -22,14 +21,25 @@ const PasswordResetToken = sequelize.define('PasswordResetToken', {
   },
   expires_at: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    field: 'expires_at'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'created_at'
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'updated_at'
   }
 }, {
-  tableName: 'PasswordResetTokens', // Match Migration Exactly
+  tableName: 'PasswordResetTokens',
+  timestamps: false,
   underscored: true
 });
-
-User.hasMany(PasswordResetToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-PasswordResetToken.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = PasswordResetToken;

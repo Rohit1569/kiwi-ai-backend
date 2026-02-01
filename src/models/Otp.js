@@ -17,10 +17,24 @@ const Otp = sequelize.define('Otp', {
   },
   expires_at: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: false,
+    field: 'expires_at'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'created_at'
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+    field: 'updated_at'
   }
 }, {
-  tableName: 'Otps', // Match Migration Exactly
+  tableName: 'Otps',
+  timestamps: false,
   underscored: true
 });
 
