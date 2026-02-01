@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const UsageStats = require('../models/UsageStats');
 const PendingUser = require('../models/PendingUser');
+const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const { sendOTP } = require('../utils/email');
 
@@ -15,14 +16,11 @@ const signup = async (userData) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    // 1. Check permanent database
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
     if (existingUser) throw new Error('USER_ALREADY_EXISTS');
 
-    // 2. Generate OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 3. Clear old pending and create new record
     await PendingUser.destroy({ where: { email: normalizedEmail } }); 
     await PendingUser.create({
       email: normalizedEmail,
@@ -34,7 +32,6 @@ const signup = async (userData) => {
 
     console.log(`--- DB PREP COMPLETE: OTP IS ${otpCode} ---`);
 
-    // 4. Send Email BACKGROUND (Don't await to prevent Vercel Timeout)
     sendOTP(normalizedEmail, otpCode).catch(err => {
       console.error('BACKGROUND EMAIL FAILURE:', err.message);
     });
@@ -56,7 +53,6 @@ const verifyOtp = async (email, code) => {
   if (!pending) throw new Error('INVALID_OTP');
   if (new Date() > pending.expires_at) throw new Error('OTP_EXPIRED');
 
-  // Move to permanent table
   const user = await User.create({
     email: pending.email,
     name: pending.name,
@@ -82,4 +78,38 @@ const login = async (email, password) => {
   return { user, token };
 };
 
-module.exports = { signup, verifyOtp, login };
+const generateResetToken = async (email) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  if (!user) throw new Error('USER_NOT_FOUND');
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  await Otp.create({
+    email: normalizedEmail,
+    code: otpCode,
+    expires_at: new Date(Date.now() + 600000)
+  });
+
+  await sendOTP(normalizedEmail, otpCode);
+  return otpCode;
+};
+
+const resetPassword = async (email, otp, newPassword) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const otpRecord = await Otp.findOne({
+    where: { email: normalizedEmail, code: otp.trim() },
+    order: [['created_at', 'DESC']]
+  });
+
+  if (!otpRecord || new Date() > otpRecord.expires_at) {
+    throw new Error('INVALID_OR_EXPIRED_OTP');
+  }
+
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  user.password = newPassword;
+  await user.save();
+  await otpRecord.destroy();
+  return true;
+};
+
+module.exports = { signup, verifyOtp, login, generateResetToken, resetPassword };

@@ -2,7 +2,6 @@ const authService = require('../services/authService');
 
 const signup = async (req, res) => {
   try {
-    console.log('Signup Request Body:', req.body);
     const user = await authService.signup(req.body);
     res.status(201).json({ 
       message: 'User registered. Check your email.', 
@@ -10,8 +9,7 @@ const signup = async (req, res) => {
     });
   } catch (error) {
     console.error('SIGNUP ERROR:', error.message);
-    // Returning the actual error message helps us debug on the phone screen
-    res.status(400).json({ error: error.message, detail: "Check Vercel logs for stack trace" });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -35,4 +33,24 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { signup, verifyOtp, login };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    await authService.generateResetToken(email);
+    res.json({ message: 'Password reset OTP sent to your email.' });
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    await authService.resetPassword(email, otp, newPassword);
+    res.json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { signup, verifyOtp, login, forgotPassword, resetPassword };
