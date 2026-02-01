@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Switched to bcryptjs
 
 const PendingUser = sequelize.define('PendingUser', {
   id: {
@@ -33,6 +33,7 @@ const PendingUser = sequelize.define('PendingUser', {
     allowNull: false
   }
 }, {
+  tableName: 'PendingUsers', // Explicitly match migration
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {

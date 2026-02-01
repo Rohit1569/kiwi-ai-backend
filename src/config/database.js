@@ -7,8 +7,7 @@ const sequelizeOptions = {
   dialectModule: pg,
   logging: false,
   define: {
-    timestamps: true,
-    underscored: true, // Forces 'created_at' instead of 'createdAt'
+    underscored: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'
   },
@@ -20,6 +19,7 @@ const sequelizeOptions = {
   }
 };
 
+// If using Neon/Cloud Postgres, ensure SSL is configured correctly to avoid warnings and connection issues
 if (process.env.DATABASE_URL) {
   sequelizeOptions.dialectOptions = {
     ssl: {
