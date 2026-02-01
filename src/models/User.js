@@ -28,10 +28,10 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  underscored: true,
   timestamps: true,
-  createdAt: 'created_at', // VERIFIED LOCAL FIX
-  updatedAt: 'updated_at'   // VERIFIED LOCAL FIX
+  underscored: true,
+  createdAt: 'created_at', // Direct mapping to your DB column
+  updatedAt: 'updated_at'  // Direct mapping to your DB column
 });
 
 User.prototype.validPassword = async function(password) {
