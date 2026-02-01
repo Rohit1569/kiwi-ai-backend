@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const User = require('./User');
 
 const UsageStats = sequelize.define('UsageStats', {
   id: {
@@ -16,32 +15,24 @@ const UsageStats = sequelize.define('UsageStats', {
       key: 'id'
     }
   },
-  messages_sent_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
+  messages_sent_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  meetings_scheduled_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  emails_sent_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  cab_booking_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  other_feature_usage_count: { type: DataTypes.INTEGER, defaultValue: 0 },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'created_at'
   },
-  meetings_scheduled_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
-  emails_sent_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
-  cab_booking_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
-  other_feature_usage_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'updated_at'
   }
 }, {
-  tableName: 'UsageStats', // Match Migration Exactly
-  underscored: true
+  tableName: 'UsageStats',
+  timestamps: false
 });
-
-User.hasOne(UsageStats, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-UsageStats.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = UsageStats;

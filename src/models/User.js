@@ -25,13 +25,20 @@ const User = sequelize.define('User', {
   is_verified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'created_at'
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    field: 'updated_at'
   }
 }, {
   tableName: 'Users',
-  underscored: true,
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false // Handled manually above to prevent 'createdAt' errors
 });
 
 User.prototype.validPassword = async function(password) {
