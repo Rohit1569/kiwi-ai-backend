@@ -27,22 +27,14 @@ const PendingUser = sequelize.define('PendingUser', {
   },
   expires_at: {
     type: DataTypes.DATE,
-    allowNull: false,
-    field: 'expires_at'
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    field: 'created_at'
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    field: 'updated_at'
+    allowNull: false
   }
 }, {
   tableName: 'PendingUsers',
-  timestamps: false, // We handle them manually above to avoid 'createdAt' errors
+  underscored: true,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {
