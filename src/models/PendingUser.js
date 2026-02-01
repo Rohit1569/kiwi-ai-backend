@@ -1,3 +1,6 @@
+const { sequelize, DataTypes } = require('../config/database');
+const bcrypt = require('bcryptjs');
+
 const PendingUser = sequelize.define('PendingUser', {
   id: {
     type: DataTypes.UUID,
@@ -27,8 +30,10 @@ const PendingUser = sequelize.define('PendingUser', {
   }
 }, {
   tableName: 'PendingUsers',
-  timestamps: true,
   underscored: true,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {
@@ -37,3 +42,5 @@ const PendingUser = sequelize.define('PendingUser', {
     }
   }
 });
+
+module.exports = PendingUser;

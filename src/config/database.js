@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Sequelize } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const pg = require('pg');
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -18,4 +18,5 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   }
 });
 
-module.exports = sequelize;
+// Export both the instance and DataTypes for easy model access
+module.exports = { sequelize, DataTypes };

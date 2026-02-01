@@ -17,25 +17,14 @@ const Otp = sequelize.define('Otp', {
   },
   expires_at: {
     type: DataTypes.DATE,
-    allowNull: false,
-    field: 'expires_at'
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-    field: 'created_at'
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-    field: 'updated_at'
+    allowNull: false
   }
 }, {
   tableName: 'Otps',
-  timestamps: false,
-  underscored: true
+  timestamps: true,
+  underscored: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 module.exports = Otp;
