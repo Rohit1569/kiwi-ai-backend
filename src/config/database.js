@@ -13,10 +13,12 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     }
   },
   define: {
+    // LAYER 1: Global Naming Policy
     underscored: true,
-    freezeTableName: true
+    freezeTableName: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
   }
 });
 
-// Export both the instance and DataTypes for easy model access
 module.exports = { sequelize, DataTypes };
