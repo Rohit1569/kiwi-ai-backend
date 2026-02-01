@@ -23,7 +23,7 @@ const User = sequelize.define('User', {
   password: { 
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'password_hash' // Maps to the db column
+    field: 'password_hash' // This must match the migration exactly
   },
   is_verified: {
     type: DataTypes.BOOLEAN,
@@ -31,8 +31,10 @@ const User = sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  underscored: true, // Forces snake_case for auto-generated columns
-  timestamps: true
+  underscored: true,
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 User.prototype.validPassword = async function(password) {
