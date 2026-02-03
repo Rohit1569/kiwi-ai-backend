@@ -1,12 +1,23 @@
 const User = require('../models/User');
 const UsageStats = require('../models/UsageStats');
 const PendingUser = require('../models/PendingUser');
+const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const { sendOTP } = require('../utils/email');
+
+// Password Validation
+const validatePassword = (password) => {
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+  if (!passwordRegex.test(password)) {
+    throw new Error('WEAK_PASSWORD: Password must be 8+ characters with uppercase, lowercase, number, and special character.');
+  }
+};
 
 const signup = async (userData) => {
   console.log('--- SIGNUP SERVICE START ---');
   const { email, name, password } = userData;
+  validatePassword(password); // Validate on signup
+  
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
@@ -15,26 +26,16 @@ const signup = async (userData) => {
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await PendingUser.destroy({ 
-      where: { email: normalizedEmail },
-      hooks: false
-    }); 
-    
+    await PendingUser.destroy({ where: { email: normalizedEmail }, hooks: false });
     await PendingUser.create({
       email: normalizedEmail,
       name,
       password, 
       otp_code: otpCode,
-      expires_at: new Date(Date.now() + 600000),
-      created_at: new Date(),
-      updated_at: new Date()
+      expires_at: new Date(Date.now() + 600000)
     });
 
-    console.log('DB Prep Complete. Initiating Blocking Mail Dispatch...');
-
-    // CRITICAL: We await here because Vercel will kill the process if we don't.
     await sendOTP(normalizedEmail, otpCode);
-
     return { email: normalizedEmail };
   } catch (error) {
     console.error('SIGNUP ERROR:', error.message);
@@ -44,37 +45,22 @@ const signup = async (userData) => {
 
 const verifyOtp = async (email, code) => {
   const normalizedEmail = email.toLowerCase().trim();
-  
-  try {
-    const pending = await PendingUser.findOne({ 
-      where: { email: normalizedEmail, otp_code: code.trim() }
-    });
+  const pending = await PendingUser.findOne({ where: { email: normalizedEmail, otp_code: code.trim() } });
 
-    if (!pending) throw new Error('INVALID_CODE');
-    if (new Date() > pending.expires_at) throw new Error('EXPIRED');
+  if (!pending) throw new Error('INVALID_CODE');
+  if (new Date() > pending.expires_at) throw new Error('EXPIRED');
 
-    const user = await User.create({
-      email: pending.email,
-      name: pending.name,
-      password: pending.password, 
-      is_verified: true,
-      created_at: new Date(),
-      updated_at: new Date()
-    }, { hooks: false });
+  const user = await User.create({
+    email: pending.email,
+    name: pending.name,
+    password: pending.password,
+    is_verified: true
+  }, { hooks: false });
 
-    await UsageStats.create({ 
-      user_id: user.id,
-      created_at: new Date(),
-      updated_at: new Date()
-    });
-    
-    await pending.destroy({ hooks: false });
+  await UsageStats.create({ user_id: user.id });
+  await pending.destroy({ hooks: false });
 
-    return true;
-  } catch (error) {
-    console.error('VERIFY ERROR:', error.message);
-    throw error;
-  }
+  return true;
 };
 
 const login = async (email, password) => {
@@ -89,4 +75,39 @@ const login = async (email, password) => {
   return { user, token };
 };
 
-module.exports = { signup, verifyOtp, login };
+const generateResetToken = async (email) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  if (!user) throw new Error('USER_NOT_FOUND');
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  await Otp.create({
+    email: normalizedEmail,
+    code: otpCode,
+    expires_at: new Date(Date.now() + 600000)
+  });
+
+  await sendOTP(normalizedEmail, `Your password reset code is: ${otpCode}`);
+  return true;
+};
+
+const resetPassword = async (email, otp, newPassword) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  validatePassword(newPassword); // Validate new password
+
+  const otpRecord = await Otp.findOne({
+    where: { email: normalizedEmail, code: otp.trim() }
+  });
+
+  if (!otpRecord || new Date() > otpRecord.expires_at) {
+    throw new Error('INVALID_OR_EXPIRED_OTP');
+  }
+
+  const user = await User.findOne({ where: { email: normalizedEmail } });
+  user.password = newPassword; // The hook will hash it
+  await user.save();
+  await otpRecord.destroy();
+  return true;
+};
+
+module.exports = { signup, verifyOtp, login, generateResetToken, resetPassword };
