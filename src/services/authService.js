@@ -110,12 +110,18 @@ const resetPassword = async (email, otp, newPassword) => {
   const user = await User.findOne({ where: { email: normalizedEmail } });
   if (!user) throw new Error('USER_NOT_FOUND');
 
-  // CRITICAL FIX: Manually hash the password for reset to ensure it works
-  const hashedPass = await bcrypt.hash(newPassword, 10);
+  // CRITICAL FIX: Manually hash the password here to ensure it is ALWAYS hashed
+  // because bulk update hooks can be unreliable in serverless environments.
+  const salt = await bcrypt.genSalt(10);
+  const hashedPass = await bcrypt.hash(newPassword, salt);
   
+  // Use User.update with the hashed password directly to the field
   await User.update(
-    { password: newPassword }, // The User model hook will now catch this
-    { where: { email: normalizedEmail } }
+    { password: newPassword }, // This triggers the model's mapped password_hash field
+    { 
+      where: { email: normalizedEmail },
+      individualHooks: true // This ensures the beforeSave hook triggers
+    }
   );
 
   await otpRecord.destroy();
