@@ -10,20 +10,17 @@ const signup = async (userData) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    // 1. Check permanent DB
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
     if (existingUser) throw new Error('ALREADY_EXISTS');
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 2. Atomic Delete & Create
-    // We use a simple query to ensure no 'createdAt' injection during destroy
     await PendingUser.destroy({ 
       where: { email: normalizedEmail },
-      hooks: false // Prevents Sequelize from running hidden validations
+      hooks: false
     }); 
     
-    const pending = await PendingUser.create({
+    await PendingUser.create({
       email: normalizedEmail,
       name,
       password, 
@@ -33,16 +30,14 @@ const signup = async (userData) => {
       updated_at: new Date()
     });
 
-    console.log('DB Prep Complete. Dispatching Mail...');
+    console.log('DB Prep Complete. Initiating Blocking Mail Dispatch...');
 
-    // 3. Dispatch OTP (Background)
-    sendOTP(normalizedEmail, otpCode).catch(err => {
-      console.error('Email background failure:', err.message);
-    });
+    // CRITICAL: We await here because Vercel will kill the process if we don't.
+    await sendOTP(normalizedEmail, otpCode);
 
     return { email: normalizedEmail };
   } catch (error) {
-    console.error('SERVICE ERROR:', error.message);
+    console.error('SIGNUP ERROR:', error.message);
     throw error;
   }
 };
@@ -58,7 +53,6 @@ const verifyOtp = async (email, code) => {
     if (!pending) throw new Error('INVALID_CODE');
     if (new Date() > pending.expires_at) throw new Error('EXPIRED');
 
-    // Move to permanent table
     const user = await User.create({
       email: pending.email,
       name: pending.name,
@@ -68,14 +62,12 @@ const verifyOtp = async (email, code) => {
       updated_at: new Date()
     }, { hooks: false });
 
-    // Initialize Usage
     await UsageStats.create({ 
       user_id: user.id,
       created_at: new Date(),
       updated_at: new Date()
     });
     
-    // Final Cleanup
     await pending.destroy({ hooks: false });
 
     return true;

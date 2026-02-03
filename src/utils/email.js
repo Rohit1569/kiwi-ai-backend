@@ -1,11 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// ENABLE POOLING FOR INSTANT DISPATCH
 const transporter = nodemailer.createTransport({
-  pool: true, // Key fix: keeps the connection open
-  maxConnections: 5,
-  maxMessages: 100,
   host: "smtp-relay.brevo.com",
   port: 587,
   secure: false, // STARTTLS
@@ -28,7 +24,6 @@ const sendOTP = async (email, otp) => {
     },
     to: email,
     subject: `${otp} is your verification code`,
-    text: `Your 6-digit access code is: ${otp}`,
     html: `
       <div style="font-family: sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #333; text-align: center;">Security Verification</h2>
@@ -36,22 +31,19 @@ const sendOTP = async (email, otp) => {
         <div style="background: #f4f4f4; padding: 15px; text-align: center; font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #007bff; margin: 20px 0;">
           ${otp}
         </div>
-        <p style="color: #888; font-size: 12px; text-align: center;">Code expires in 10 minutes. Protocol: <b>STRICT-AI-SECURE</b></p>
+        <p style="color: #888; font-size: 12px; text-align: center;">Code expires in 10 minutes.</p>
       </div>
     `,
   };
 
   try {
-    // Non-blocking dispatch
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('--- DISPATCH FAILED ---', error.message);
-      } else {
-        console.log('--- OTP DISPATCHED INSTANTLY ---', info.messageId);
-      }
-    });
+    // CRITICAL: We MUST await here on Vercel so the process isn't killed
+    const info = await transporter.sendMail(mailOptions);
+    console.log('--- MAIL SENT SUCCESSFULLY ---', info.messageId);
+    return info;
   } catch (error) {
-    console.error('--- CRITICAL SMTP FAULT ---', error.message);
+    console.error('--- MAIL FAILED ---', error.message);
+    throw error;
   }
 };
 
