@@ -40,7 +40,14 @@ const User = db.sequelize.define('User', {
   }
 }, {
   tableName: 'Users',
-  timestamps: false // DISABLE AUTOMATIC INJECTION
+  timestamps: false,
+  hooks: {
+    beforeSave: async (user) => {
+      if (user.changed('password')) {
+        user.password = await bcrypt.hash(user.password, 10);
+      }
+    }
+  }
 });
 
 User.prototype.validPassword = async function(password) {

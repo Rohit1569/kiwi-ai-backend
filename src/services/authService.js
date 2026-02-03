@@ -4,6 +4,7 @@ const PendingUser = require('../models/PendingUser');
 const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
 const { sendOTP } = require('../utils/email');
+const bcrypt = require('bcryptjs');
 
 // Password Validation
 const validatePassword = (password) => {
@@ -14,10 +15,8 @@ const validatePassword = (password) => {
 };
 
 const signup = async (userData) => {
-  console.log('--- SIGNUP SERVICE START ---');
   const { email, name, password } = userData;
-  validatePassword(password); // Validate on signup
-  
+  validatePassword(password);
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
@@ -38,7 +37,6 @@ const signup = async (userData) => {
     await sendOTP(normalizedEmail, otpCode);
     return { email: normalizedEmail };
   } catch (error) {
-    console.error('SIGNUP ERROR:', error.message);
     throw error;
   }
 };
@@ -50,14 +48,17 @@ const verifyOtp = async (email, code) => {
   if (!pending) throw new Error('INVALID_CODE');
   if (new Date() > pending.expires_at) throw new Error('EXPIRED');
 
+  // Move to permanent User table - password is already hashed in PendingUser
   const user = await User.create({
     email: pending.email,
     name: pending.name,
-    password: pending.password,
-    is_verified: true
+    password: pending.password, 
+    is_verified: true,
+    created_at: new Date(),
+    updated_at: new Date()
   }, { hooks: false });
 
-  await UsageStats.create({ user_id: user.id });
+  await UsageStats.create({ user_id: user.id, created_at: new Date(), updated_at: new Date() });
   await pending.destroy({ hooks: false });
 
   return true;
@@ -81,10 +82,13 @@ const generateResetToken = async (email) => {
   if (!user) throw new Error('USER_NOT_FOUND');
 
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  await Otp.destroy({ where: { email: normalizedEmail } });
   await Otp.create({
     email: normalizedEmail,
     code: otpCode,
-    expires_at: new Date(Date.now() + 600000)
+    expires_at: new Date(Date.now() + 600000),
+    created_at: new Date(),
+    updated_at: new Date()
   });
 
   await sendOTP(normalizedEmail, `Your password reset code is: ${otpCode}`);
@@ -93,7 +97,7 @@ const generateResetToken = async (email) => {
 
 const resetPassword = async (email, otp, newPassword) => {
   const normalizedEmail = email.toLowerCase().trim();
-  validatePassword(newPassword); // Validate new password
+  validatePassword(newPassword);
 
   const otpRecord = await Otp.findOne({
     where: { email: normalizedEmail, code: otp.trim() }
@@ -104,8 +108,16 @@ const resetPassword = async (email, otp, newPassword) => {
   }
 
   const user = await User.findOne({ where: { email: normalizedEmail } });
-  user.password = newPassword; // The hook will hash it
-  await user.save();
+  if (!user) throw new Error('USER_NOT_FOUND');
+
+  // CRITICAL FIX: Manually hash the password for reset to ensure it works
+  const hashedPass = await bcrypt.hash(newPassword, 10);
+  
+  await User.update(
+    { password: newPassword }, // The User model hook will now catch this
+    { where: { email: normalizedEmail } }
+  );
+
   await otpRecord.destroy();
   return true;
 };
