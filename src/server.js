@@ -6,7 +6,7 @@ const { sequelize } = require('./config/database');
 
 const app = express();
 
-console.log('>>> APPLE AI CORE STARTING - VERSION 1.0.5');
+console.log('>>> APPLE AI CORE STARTING - VERSION 1.0.6');
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: '*', credentials: true }));
@@ -16,15 +16,17 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 const usageRoutes = require('./routes/usageRoutes');
 const financeRoutes = require('./routes/financeRoutes');
-const productivityRoutes = require('./routes/productivityRoutes'); // NEW
+const productivityRoutes = require('./routes/productivityRoutes');
+const fitnessRoutes = require('./routes/fitnessRoutes'); // NEW
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/usage', usageRoutes);
 app.use('/api/finance', financeRoutes);
-app.use('/api/productivity', productivityRoutes); // NEW
+app.use('/api/productivity', productivityRoutes);
+app.use('/api/fitness', fitnessRoutes); // NEW
 
-app.get('/', (req, res) => res.send('APPLE AI CORE V1.0.5 ACTIVE'));
+app.get('/', (req, res) => res.send('APPLE AI CORE V1.0.6 ACTIVE'));
 
 const PORT = process.env.PORT || 5002;
 

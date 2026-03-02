@@ -19,17 +19,21 @@ const config = {
 
 // If using the full connection string (Neon Tech / Vercel)
 if (process.env.DATABASE_URL) {
+  const isLocal = process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+  
+  const sslConfig = isLocal ? {} : {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  };
+
   module.exports = {
     development: {
       url: process.env.DATABASE_URL,
       dialect: 'postgres',
       dialectModule: pg,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      }
+      dialectOptions: sslConfig
     },
     production: {
       url: process.env.DATABASE_URL,
