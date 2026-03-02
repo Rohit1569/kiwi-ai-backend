@@ -9,11 +9,7 @@ const signup = async (req, res) => {
       email: user.email 
     });
   } catch (error) {
-    console.error('SIGNUP ERROR:', error.message);
-    res.status(400).json({ 
-      status: 'ERROR',
-      message: error.message 
-    });
+    res.status(400).json({ status: 'ERROR', message: error.message });
   }
 };
 
@@ -23,11 +19,7 @@ const verifyOtp = async (req, res) => {
     await authService.verifyOtp(email, otp);
     res.json({ status: 'SUCCESS', message: 'Identity verified.' });
   } catch (error) {
-    console.error('VERIFY OTP ERROR:', error.message);
-    res.status(400).json({ 
-      status: 'ERROR',
-      message: error.message 
-    });
+    res.status(400).json({ status: 'ERROR', message: error.message });
   }
 };
 
@@ -35,13 +27,14 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const { user, token } = await authService.login(email, password);
-    res.json({ status: 'SUCCESS', token, user: { id: user.id, name: user.name, email: user.email } });
-  } catch (error) {
-    console.error('LOGIN ERROR:', error.message);
-    res.status(401).json({ 
-      status: 'ERROR',
-      message: error.message 
+    // RETURN THE USER ID so the phone can sync correctly
+    res.json({ 
+      status: 'SUCCESS', 
+      token, 
+      user: { id: user.id, name: user.name, email: user.email } 
     });
+  } catch (error) {
+    res.status(401).json({ status: 'ERROR', message: error.message });
   }
 };
 
