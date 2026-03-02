@@ -2,30 +2,24 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const tableInfo = await queryInterface.describeTable('Expenses');
+    const transaction = await queryInterface.sequelize.transaction();
+    try {
+      // 1. Force drop all potential conflicting constraints using raw SQL
+      await queryInterface.sequelize.query('ALTER TABLE "Expenses" DROP CONSTRAINT IF EXISTS "Expenses_wallet_id_fkey"', { transaction });
+      await queryInterface.sequelize.query('ALTER TABLE "Expenses" DROP CONSTRAINT IF EXISTS "Expenses_category_id_fkey"', { transaction });
+      await queryInterface.sequelize.query('ALTER TABLE "Budgets" DROP CONSTRAINT IF EXISTS "Budgets_category_id_fkey"', { transaction });
 
-    // Make wallet_id nullable if it exists
-    if (tableInfo.wallet_id) {
-      await queryInterface.changeColumn('Expenses', 'wallet_id', {
-        type: Sequelize.STRING,
-        allowNull: true
-      });
-    }
+      // 2. Force change types with explicit casting (USING clause is key for Postgres)
+      await queryInterface.sequelize.query('ALTER TABLE "Expenses" ALTER COLUMN "wallet_id" TYPE VARCHAR(255) USING "wallet_id"::text', { transaction });
+      await queryInterface.sequelize.query('ALTER TABLE "Expenses" ALTER COLUMN "category_id" TYPE VARCHAR(255) USING "category_id"::text', { transaction });
+      await queryInterface.sequelize.query('ALTER TABLE "Budgets" ALTER COLUMN "category_id" TYPE VARCHAR(255) USING "category_id"::text', { transaction });
 
-    // Make category_id nullable to avoid 'contains null values' error
-    if (tableInfo.category_id) {
-      await queryInterface.changeColumn('Expenses', 'category_id', {
-        type: Sequelize.STRING,
-        allowNull: true // Changed to TRUE to allow existing data
-      });
-    }
-
-    const budgetTableInfo = await queryInterface.describeTable('Budgets');
-    if (budgetTableInfo.category_id) {
-      await queryInterface.changeColumn('Budgets', 'category_id', {
-        type: Sequelize.STRING,
-        allowNull: true // Changed to TRUE to allow existing data
-      });
+      await transaction.commit();
+      console.log('>>> [DB REPAIR] High-authority migration complete.');
+    } catch (error) {
+      await transaction.rollback();
+      console.error('--- [DB REPAIR] Migration failed, rolling back ---', error.message);
+      throw error;
     }
   },
 

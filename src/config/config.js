@@ -14,28 +14,22 @@ const config = {
     underscored: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at'
-  },
-//  dialectOptions: {
-//    ssl: {
-//      require: true,
-//      rejectUnauthorized: false
-//    }
-//  }
+  }
 };
 
-// If using the full connection string (Neon Tech)
+// If using the full connection string (Neon Tech / Vercel)
 if (process.env.DATABASE_URL) {
   module.exports = {
     development: {
       url: process.env.DATABASE_URL,
       dialect: 'postgres',
       dialectModule: pg,
-//      dialectOptions: {
-//        ssl: {
-//          require: true,
-//          rejectUnauthorized: false
-//        }
-//      }
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
     },
     production: {
       url: process.env.DATABASE_URL,
@@ -52,6 +46,14 @@ if (process.env.DATABASE_URL) {
 } else {
   module.exports = {
     development: config,
-    production: config
+    production: {
+      ...config,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
+    }
   };
 }
