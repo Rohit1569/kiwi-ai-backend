@@ -8,6 +8,7 @@ module.exports = {
       name: { type: Sequelize.STRING, allowNull: false },
       email: { type: Sequelize.STRING, unique: true, allowNull: false },
       password_hash: { type: Sequelize.STRING, allowNull: false },
+      device_id: { type: Sequelize.STRING, allowNull: true }, // Added for device binding
       is_verified: { type: Sequelize.BOOLEAN, defaultValue: false },
       created_at: { allowNull: false, type: Sequelize.DATE },
       updated_at: { allowNull: false, type: Sequelize.DATE }
@@ -72,11 +73,10 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Adding CASCADE: true forces the drop even if other tables depend on them
-    await queryInterface.dropTable('PasswordResetTokens', { cascade: true });
-    await queryInterface.dropTable('Otps', { cascade: true });
-    await queryInterface.dropTable('UsageStats', { cascade: true });
-    await queryInterface.dropTable('PendingUsers', { cascade: true });
-    await queryInterface.dropTable('Users', { cascade: true });
+    await queryInterface.dropTable('PasswordResetTokens');
+    await queryInterface.dropTable('Otps');
+    await queryInterface.dropTable('UsageStats');
+    await queryInterface.dropTable('PendingUsers');
+    await queryInterface.dropTable('Users');
   }
 };
