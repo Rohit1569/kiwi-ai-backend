@@ -11,13 +11,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      category_id: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: { model: 'Categories', key: 'id' },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
+      category: { type: Sequelize.STRING, allowNull: false, defaultValue: 'General' },
       monthly_limit: { type: Sequelize.DOUBLE, allowNull: false },
       month: { type: Sequelize.STRING, allowNull: false }, // Format: YYYY-MM
       created_at: { allowNull: false, type: Sequelize.DATE },
