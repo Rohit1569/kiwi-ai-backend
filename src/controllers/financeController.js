@@ -17,26 +17,32 @@ const ensureUserExists = async (userId) => {
 const addExpense = async (req, res) => {
   try {
     await ensureUserExists(req.user.id);
-    const expense = await Expense.create({
+    
+    // MASTER SYNC: Handle both camelCase and underscores from mobile
+    const expenseData = {
       id: req.body.id,
       user_id: req.user.id,
-      // FIXED: Prioritize 'category' field from app
-      category: req.body.category || req.body.categoryId || req.body.category_id || 'General',
-      amount: req.body.amount,
-      date: req.body.date ? new Date(req.body.date) : new Date(),
-      note: req.body.note
-    });
-    console.log(`>>> [DB SUCCESS] Expense saved in ${expense.category}`);
+      category: req.body.category || 'General',
+      amount: parseFloat(req.body.amount),
+      note: req.body.note || '',
+      date: req.body.date ? new Date(req.body.date) : new Date()
+    };
+
+    const expense = await Expense.create(expenseData);
+    console.log(`>>> [CLOUD DB] Expense saved for user ${req.user.id}: $${expense.amount}`);
     res.status(201).json(expense);
   } catch (error) {
-    console.error('--- [DB ERROR] Expense Save Failed ---', error.message);
+    console.error('--- [CLOUD ERROR] Failed to save expense ---', error.message);
     res.status(400).json({ error: error.message });
   }
 };
 
 const getExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.findAll({ where: { user_id: req.user.id }, order: [['date', 'DESC']] });
+    const expenses = await Expense.findAll({ 
+      where: { user_id: req.user.id }, 
+      order: [['date', 'DESC']] 
+    });
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,22 +55,23 @@ const addIncome = async (req, res) => {
     const income = await Income.create({
       id: req.body.id,
       user_id: req.user.id,
-      source: req.body.source,
-      amount: req.body.amount,
+      source: req.body.source || 'Revenue',
+      amount: parseFloat(req.body.amount),
       date: req.body.date ? new Date(req.body.date) : new Date(),
-      note: req.body.note
+      note: req.body.note || ''
     });
-    console.log('>>> [DB SUCCESS] Income saved');
     res.status(201).json(income);
   } catch (error) {
-    console.error('--- [DB ERROR] Income Save Failed ---', error.message);
     res.status(400).json({ error: error.message });
   }
 };
 
 const getIncomes = async (req, res) => {
   try {
-    const incomes = await Income.findAll({ where: { user_id: req.user.id }, order: [['date', 'DESC']] });
+    const incomes = await Income.findAll({ 
+      where: { user_id: req.user.id }, 
+      order: [['date', 'DESC']] 
+    });
     res.json(incomes);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -73,12 +80,10 @@ const getIncomes = async (req, res) => {
 
 const addBudget = async (req, res) => {
   try {
-    await ensureUserExists(req.user.id);
     const budget = await Budget.create({
       id: req.body.id,
       user_id: req.user.id,
-      // FIXED: Align with simplified category field
-      category: req.body.category || req.body.categoryId || req.body.category_id || 'General',
+      category: req.body.category,
       monthly_limit: req.body.monthlyLimit || req.body.monthly_limit,
       month: req.body.month
     });
@@ -99,7 +104,6 @@ const getBudgets = async (req, res) => {
 
 const addSavingsGoal = async (req, res) => {
   try {
-    await ensureUserExists(req.user.id);
     const goal = await SavingsGoal.create({
       id: req.body.id,
       user_id: req.user.id,

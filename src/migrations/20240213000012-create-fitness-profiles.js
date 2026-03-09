@@ -33,7 +33,7 @@ module.exports = {
         allowNull: false
       },
       gender: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING, // Changed from ENUM to STRING
         allowNull: false
       },
       age: {
@@ -49,15 +49,7 @@ module.exports = {
         allowNull: false
       },
       body_type: {
-        type: Sequelize.ENUM(
-          'Skinny Build',
-          'Normal Build',
-          'Over Normal Build',
-          'Medium Build',
-          'Over Medium Build',
-          'Heavy Build',
-          'Obese Build'
-        ),
+        type: Sequelize.STRING, // Changed from ENUM to STRING
         allowNull: false
       },
       water_intake: {
@@ -65,7 +57,7 @@ module.exports = {
         allowNull: false
       },
       lifestyle: {
-        type: Sequelize.ENUM('Active', 'Moderate', 'Sedentary'),
+        type: Sequelize.STRING, // Changed from ENUM to STRING
         allowNull: false
       },
       exercise_flag: {
@@ -85,7 +77,7 @@ module.exports = {
         defaultValue: 0
       },
       food_type: {
-        type: Sequelize.ENUM('Veg', 'Non-Veg', 'Mixed'),
+        type: Sequelize.STRING, // Changed from ENUM to STRING
         allowNull: false
       },
       meals_per_day: {

@@ -11,20 +11,7 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-      wallet_id: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: { model: 'Wallets', key: 'id' },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
-      category_id: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: { model: 'Categories', key: 'id' },
-        onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      },
+      category: { type: Sequelize.STRING, allowNull: false, defaultValue: 'General' },
       amount: { type: Sequelize.DOUBLE, allowNull: false },
       date: { type: Sequelize.DATE, allowNull: false },
       note: { type: Sequelize.TEXT },

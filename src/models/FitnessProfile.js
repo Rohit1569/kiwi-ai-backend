@@ -32,31 +32,23 @@ const FitnessProfile = sequelize.define('FitnessProfile', {
     allowNull: false
   },
   height: {
-    type: DataTypes.FLOAT, // In cm or inches
+    type: DataTypes.FLOAT,
     allowNull: false
   },
   weight: {
-    type: DataTypes.FLOAT, // In kg or lbs
+    type: DataTypes.FLOAT,
     allowNull: false
   },
   body_type: {
-    type: DataTypes.ENUM(
-      'Skinny Build',
-      'Normal Build',
-      'Over Normal Build',
-      'Medium Build',
-      'Over Medium Build',
-      'Heavy Build',
-      'Obese Build'
-    ),
+    type: DataTypes.STRING, // Changed from ENUM to STRING for flexibility
     allowNull: false
   },
   water_intake: {
-    type: DataTypes.FLOAT, // Liters per day
+    type: DataTypes.FLOAT,
     allowNull: false
   },
   lifestyle: {
-    type: DataTypes.ENUM('Active', 'Moderate', 'Sedentary'),
+    type: DataTypes.STRING, // Changed from ENUM to STRING
     allowNull: false
   },
   exercise_flag: {
@@ -76,7 +68,7 @@ const FitnessProfile = sequelize.define('FitnessProfile', {
     defaultValue: 0
   },
   food_type: {
-    type: DataTypes.ENUM('Veg', 'Non-Veg', 'Mixed'),
+    type: DataTypes.STRING, // Changed from ENUM to STRING
     allowNull: false
   },
   meals_per_day: {
@@ -84,7 +76,7 @@ const FitnessProfile = sequelize.define('FitnessProfile', {
     allowNull: false
   },
   outside_food_frequency: {
-    type: DataTypes.STRING, // e.g., "Once a week", "Daily"
+    type: DataTypes.STRING,
     allowNull: true
   }
 }, {
