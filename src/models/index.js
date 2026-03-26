@@ -6,7 +6,8 @@ const SavingsGoal = require('./SavingsGoal');
 const UsageStats = require('./UsageStats');
 const Task = require('./Task');
 const Note = require('./Note');
-const FitnessProfile = require('./FitnessProfile'); // NEW
+const FitnessProfile = require('./FitnessProfile');
+const Subscription = require('./Subscription');
 
 // EXPERT ASSOCIATIONS - Establishing the "Owned By" link
 User.hasMany(Expense, { foreignKey: 'user_id' });
@@ -27,11 +28,14 @@ Task.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(Note, { foreignKey: 'user_id' });
 Note.belongsTo(User, { foreignKey: 'user_id' });
 
-User.hasOne(FitnessProfile, { foreignKey: 'user_id' }); // NEW
-FitnessProfile.belongsTo(User, { foreignKey: 'user_id' }); // NEW
+User.hasOne(FitnessProfile, { foreignKey: 'user_id' });
+FitnessProfile.belongsTo(User, { foreignKey: 'user_id' });
 
 User.hasOne(UsageStats, { foreignKey: 'user_id' });
 UsageStats.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasOne(Subscription, { foreignKey: 'user_id' });
+Subscription.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = {
   User,
@@ -42,5 +46,6 @@ module.exports = {
   UsageStats,
   Task,
   Note,
-  FitnessProfile
+  FitnessProfile,
+  Subscription
 };
