@@ -3,10 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { sequelize } = require('./config/database');
+const authenticate = require('./middleware/authMiddleware');
+const checkSubscription = require('./middleware/subscriptionMiddleware');
 
 const app = express();
 
-console.log('>>> APPLE AI CORE STARTING - VERSION 1.0.6');
+console.log('>>> APPLE AI CORE STARTING - VERSION 1.1.2');
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: '*', credentials: true }));
@@ -17,16 +19,27 @@ const authRoutes = require('./routes/authRoutes');
 const usageRoutes = require('./routes/usageRoutes');
 const financeRoutes = require('./routes/financeRoutes');
 const productivityRoutes = require('./routes/productivityRoutes');
-const fitnessRoutes = require('./routes/fitnessRoutes'); // NEW
+const fitnessRoutes = require('./routes/fitnessRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
-// API Routes
+// Public Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/usage', usageRoutes);
-app.use('/api/finance', financeRoutes);
-app.use('/api/productivity', productivityRoutes);
-app.use('/api/fitness', fitnessRoutes); // NEW
 
-app.get('/', (req, res) => res.send('APPLE AI CORE V1.0.6 ACTIVE'));
+// Admin Routes (Only Authentication + isAdmin check inside adminRoutes)
+app.use('/api/admin', adminRoutes);
+
+// Protected Routes with Authentication and Subscription Check
+app.use('/api/subscriptions', authenticate, subscriptionRoutes); 
+app.use('/api/usage', authenticate, checkSubscription, usageRoutes);
+app.use('/api/finance', authenticate, checkSubscription, financeRoutes);
+app.use('/api/productivity', authenticate, checkSubscription, productivityRoutes);
+app.use('/api/fitness', authenticate, checkSubscription, fitnessRoutes);
+
+app.get('/', (req, res) => res.send('APPLE AI CORE V1.1.2 ACTIVE'));
+
+// Start Cron Jobs
+require('./utils/cronJobs');
 
 const PORT = process.env.PORT || 5002;
 

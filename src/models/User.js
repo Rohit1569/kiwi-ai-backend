@@ -24,8 +24,21 @@ const User = db.sequelize.define('User', {
   },
   device_id: {
     type: DataTypes.STRING,
-    allowNull: true, // Null until first binding
+    allowNull: true,
     field: 'device_id'
+  },
+  voice_signature: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    field: 'voice_signature'
+  },
+  role: {
+    type: DataTypes.ENUM('user', 'admin'),
+    defaultValue: 'user'
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   is_verified: {
     type: DataTypes.BOOLEAN,
@@ -34,13 +47,13 @@ const User = db.sequelize.define('User', {
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
+    defaultValue: DataTypes.NOW,
     field: 'created_at'
   },
   updated_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
+    defaultValue: DataTypes.NOW,
     field: 'updated_at'
   }
 }, {

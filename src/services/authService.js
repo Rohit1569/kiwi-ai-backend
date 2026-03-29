@@ -1,5 +1,4 @@
-const User = require('../models/User');
-const UsageStats = require('../models/UsageStats');
+const { User, UsageStats, Subscription } = require('../models');
 const PendingUser = require('../models/PendingUser');
 const Otp = require('../models/Otp');
 const jwt = require('jsonwebtoken');
@@ -12,20 +11,33 @@ const login = async (email, password, deviceId) => {
   
   if (!user) throw new Error('NOT_FOUND');
   
+  // CHECK IF ACCOUNT IS ACTIVE/BLOCKED
+  if (!user.is_active) {
+    throw new Error('ACCOUNT_DISABLED: Your account has been disabled. Please contact support.');
+  }
+  
   const isPasswordValid = await user.validPassword(password);
   if (!isPasswordValid) throw new Error('INVALID_PASS');
 
   // DEVICE BINDING LOGIC
-  if (!user.device_id) {
-    // First time login - bind the device
-    await user.update({ device_id: deviceId });
-  } else if (user.device_id !== deviceId) {
-    // Device mismatch - block login
-    throw new Error('DEVICE_MISMATCH: This account is already bound to another device.');
+  if (deviceId !== 'ADMIN_WEB_PANEL') {
+    if (!user.device_id) {
+      await user.update({ device_id: deviceId });
+    } else if (user.device_id !== deviceId) {
+      throw new Error('DEVICE_MISMATCH: This account is already bound to another device.');
+    }
   }
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-  return { user, token };
+  // CHECK IF VOICE ENROLLMENT IS MISSING
+  const needsEnrollment = !user.voice_signature;
+
+  const token = jwt.sign(
+    { id: user.id, role: user.role, needsVoiceEnrollment: needsEnrollment }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: '30d' }
+  );
+  
+  return { user, token, needsVoiceEnrollment: needsEnrollment };
 };
 
 const verifyOtp = async (email, code, deviceId) => {
@@ -35,18 +47,30 @@ const verifyOtp = async (email, code, deviceId) => {
   if (!pending) throw new Error('INVALID_CODE');
   if (new Date() > pending.expires_at) throw new Error('EXPIRED');
 
-  // Create user and bind device immediately upon first verification
   const user = await User.create({
     email: pending.email,
     name: pending.name,
     password: pending.password, 
-    device_id: deviceId, // Bind device during signup
+    device_id: deviceId,
     is_verified: true,
+    role: 'user',
     created_at: new Date(),
     updated_at: new Date()
   }, { hooks: false });
 
   await UsageStats.create({ user_id: user.id, created_at: new Date(), updated_at: new Date() });
+  
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 30);
+  
+  await Subscription.create({
+    user_id: user.id,
+    plan_type: 'free',
+    start_date: new Date(),
+    end_date: endDate,
+    status: 'active'
+  });
+
   await pending.destroy({ hooks: false });
 
   return true;
@@ -99,7 +123,9 @@ const generateResetToken = async (email) => {
 
 const resetPassword = async (email, otp, newPassword) => {
   const normalizedEmail = email.toLowerCase().trim();
-  const otpRecord = await Otp.findOne({ where: { email: normalizedEmail, code: otp.trim() } });
+  const otpRecord = await Otp.findOne({
+    where: { email: normalizedEmail, code: otp.trim() }
+  });
 
   if (!otpRecord || new Date() > otpRecord.expires_at) {
     throw new Error('INVALID_OR_EXPIRED_OTP');
