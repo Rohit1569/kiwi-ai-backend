@@ -73,7 +73,14 @@ const verifyOtp = async (email, code, deviceId) => {
 
   await pending.destroy({ hooks: false });
 
-  return true;
+  // NEW: Return token so user is automatically logged in and can perform voice enrollment
+  const token = jwt.sign(
+    { id: user.id, role: user.role, needsVoiceEnrollment: true }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: '30d' }
+  );
+
+  return { user, token };
 };
 
 const signup = async (userData) => {
