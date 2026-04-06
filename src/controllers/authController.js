@@ -13,8 +13,20 @@ const signup = async (req, res) => {
 const verifyOtp = async (req, res) => {
   try {
     const { email, otp, deviceId } = req.body;
-    await authService.verifyOtp(email, otp, deviceId);
-    res.json({ status: 'SUCCESS', message: 'Identity verified.' });
+    // CAPTURE THE RESULT (User and Token)
+    const result = await authService.verifyOtp(email, otp, deviceId);
+    
+    res.json({ 
+      status: 'SUCCESS', 
+      message: 'Identity verified.',
+      token: result.token,
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: result.user.role
+      }
+    });
   } catch (error) {
     res.status(400).json({ status: 'ERROR', message: error.message });
   }
@@ -74,7 +86,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// EXPLICIT EXPORT OBJECT
 module.exports = {
   signup,
   verifyOtp,
