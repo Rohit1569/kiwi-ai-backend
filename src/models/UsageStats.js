@@ -19,18 +19,17 @@ const UsageStats = db.sequelize.define('UsageStats', {
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
-    field: 'created_at'
+    defaultValue: DataTypes.NOW
   },
   updated_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
-    field: 'updated_at'
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'UsageStats',
-  timestamps: false // PERMANENTLY DISABLE THE AUTOMATIC ENGINE
+  timestamps: false,
+  underscored: true
 });
 
 module.exports = UsageStats;

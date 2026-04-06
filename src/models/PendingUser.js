@@ -32,18 +32,18 @@ const PendingUser = db.sequelize.define('PendingUser', {
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
+    defaultValue: DataTypes.NOW,
     field: 'created_at'
   },
   updated_at: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: new Date(),
+    defaultValue: DataTypes.NOW,
     field: 'updated_at'
   }
 }, {
   tableName: 'PendingUsers',
-  timestamps: false, // FORCE-STOP AUTOMATIC TIMESTAMPS
+  timestamps: false,
   hooks: {
     beforeCreate: async (pendingUser) => {
       if (pendingUser.password) {
